@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- El <base target="_top"> es importante para que los enlaces funcionen en el iframe de Google Apps Script -->
+    <base target="_top">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            /* ... (colores base) ... */
+            --brand-fuchsia:#E6007A;--interactive-blue:#007AFF;--text-on-accent:#FFFFFF;--text-primary:#1a202c;--glass-bg:rgba(255,255,255,0.98);--bg-body:var(--glass-bg);--glass-border:rgba(220,220,220,0.9);--glass-shadow-1:rgba(0,0,0,0.25);--glass-shadow-2:rgba(0,0,0,0.1);--glass-inset:rgba(255,255,255,0.8);--button-secondary-bg:rgba(245,245,245,0.9);--button-secondary-color:#4a5568;--button-secondary-border:rgba(200,200,200,0.7);--button-secondary-inset-shadow:rgba(0,0,0,0.12);--button-secondary-outer-shadow:rgba(0,0,0,0.08);--switch-bg:#f8fafc;--switch-border:#e2e8f0;--switch-text:#64748b;--switch-text-active:#ffffff;--switch-primary-thumb:#e8368f;--switch-primary-glow:rgba(232,54,143,0.7);--switch-secondary-thumb:#0066cc;--switch-secondary-glow:rgba(0,102,204,0.7);--switch-shadow-inset:inset 0 3px 8px rgba(0,0,0,0.18);--switch-shadow-outer:0 3px 6px rgba(0,0,0,0.12);--switch-shadow-thumb:0 6px 18px rgba(0,0,0,0.35);--switch-transition-speed:0.4s;--switch-transition-timing:cubic-bezier(0.16,1,0.3,1);--dm-toggle-bg:rgba(245,245,245,0.9);--dm-toggle-border:rgba(200,200,200,0.7);--dm-toggle-shadow-inset:inset 0 2px 4px rgba(0,0,0,0.15);--dm-toggle-shadow-outer:0 2px 3px rgba(0,0,0,0.1);--dm-toggle-icon-color:#4b5563;
+
+            /* --- Variables de Acento Dinámico --- */
+            /* Se inician con los valores de ENTEL (azul) por defecto */
+            --brand-accent-color: var(--interactive-blue);
+            --brand-accent-glow: rgba(0, 122, 255, 0.4);
+            --brand-accent-hover-bg: rgba(0, 122, 255, 0.07);
+        }
+        
+        body.dark-mode{--text-primary:#F0F0F0;--glass-bg:rgba(40,40,40,0.98);--bg-body:var(--glass-bg);--glass-border:rgba(90,90,90,0.9);--glass-shadow-1:rgba(0,0,0,0.7);--glass-shadow-2:rgba(0,0,0,0.5);--glass-inset:rgba(255,255,255,0.15);--button-secondary-bg:rgba(60,60,60,0.9);--button-secondary-color:#C0C0C0;--button-secondary-border:rgba(110,110,110,0.7);--button-secondary-inset-shadow:rgba(255,255,255,0.08);--button-secondary-outer-shadow:rgba(0,0,0,0.6);--switch-bg:#252525;--switch-border:#606060;--switch-text:#A0A0A0;--switch-shadow-inset:inset 0 4px 12px rgba(0,0,0,0.7);--switch-shadow-outer:0 4px 10px rgba(0,0,0,0.6);--switch-shadow-thumb:0 10px 30px rgba(0,0,0,0.9);--dm-toggle-bg:rgba(60,60,60,0.9);--dm-toggle-border:rgba(110,110,110,0.7);--dm-toggle-shadow-inset:inset 0 3px 6px rgba(255,255,255,0.08);--dm-toggle-shadow-outer:0 3px 5px rgba(0,0,0,0.6);--dm-toggle-icon-color:#e0e0e0}*,*::before,*::after{box-sizing:border-box}html,body{height:100%;margin:0;padding:0;overflow-x:hidden;}body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;background-color:var(--bg-body);color:var(--text-primary);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:0;user-select:none;transition:background-color .3s ease,color .3s ease}body.dark-mode h2,body.dark-mode p,body.dark-mode label,body.dark-mode .text-gray-600,body.dark-mode .text-gray-700,body.dark-mode .text-gray-500,body.dark-mode .image-preview-container .text-gray-700{color:var(--text-primary)}body.dark-mode textarea::placeholder,body.dark-mode input::placeholder{color:rgba(240,240,240,0.4)}::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:rgba(0,0,0,0.03);border-radius:10px}::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.15);border-radius:10px;border:2px solid rgba(255,255,255,0.03)}::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,0.3)}.glass-effect{
+            /* backdrop-filter:blur(60px) saturate(220%); */
+            /* -webkit-backdrop-filter:blur(60px) saturate(220%); */
+            background-color:var(--glass-bg);
+            /* border:1px solid var(--glass-border); */
+            /* border-radius:20px; */
+            /* box-shadow:0 15px 45px var(--glass-shadow-1),0 0 25px var(--glass-shadow-2),inset 0 0 15px var(--glass-inset); */
+            display:flex;flex-direction:column;flex-grow:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+            overflow-x: hidden; /* <-- AÑADIDO PARA FORZAR QUE NO HAYA SCROLL HORIZONTAL */
+            /* transform:translateZ(0); */
+            will-change:background-color;transition:all .3s ease;position:relative;padding:1.25rem;width:100%;
+            /* max-width:448px; */
+        }
+        
+        /* Botón de envío usa la variable de acento */
+        .button-press-effect{transition:all .2s cubic-bezier(.2,.8,.2,1);border:none;outline:none;position:relative;overflow:hidden;background-color:var(--brand-accent-color);box-shadow:0 8px 18px rgba(0,0,0,0.35);transform:translateZ(0);will-change:transform,box-shadow}
+        
+        .button-press-effect::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at center,rgba(255,255,255,0.25) 0,rgba(255,255,255,0) 70%);opacity:0;transition:opacity .25s ease-in-out;pointer-events:none}.button-press-effect:hover::before{opacity:1}.button-press-effect:hover{transform:translateY(-3px) scale(1.005);box-shadow:0 12px 25px rgba(0,0,0,0.45)}.button-press-effect:active{transform:translateY(1px) scale(.99);box-shadow:inset 0 4px 10px rgba(0,0,0,0.6)}.button-press-effect span{text-shadow:0 1px 4px rgba(0,0,0,0.5)}
+        
+        /* Foco de inputs usa la variable de acento */
+        input:focus,textarea:focus,select:focus{
+            outline:none;
+            border-color:var(--brand-accent-color);
+            box-shadow:0 0 0 5px var(--brand-accent-glow)
+        }
+        
+        .secondary-button{display:flex;align-items:center;justify-content:center;padding:.5rem .75rem;font-size:.875rem;font-weight:500;border-radius:.375rem;box-shadow:inset 0 1px 2px var(--button-secondary-inset-shadow),0 1px 1px var(--button-secondary-outer-shadow);background-color:var(--button-secondary-bg);color:var(--button-secondary-color);border:1px solid var(--button-secondary-border);transition:all .2s cubic-bezier(.2,.8,.2,1);cursor:pointer}
+        
+        /* Hover de botón secundario usa la variable de acento */
+        .secondary-button:hover{
+            background-color:var(--brand-accent-hover-bg);
+            border-color:var(--brand-accent-color);
+            color:var(--brand-accent-color);
+            box-shadow:inset 0 1px 2px rgba(0,0,0,0.05),0 2px 6px rgba(0,0,0,0.08);
+            transform:translateY(-1px) scale(1.005)
+        }
+        
+        .secondary-button:active{transform:translateY(.5px) scale(.99);box-shadow:inset 0 2px 4px rgba(0,0,0,0.2)}.secondary-button .emoji{font-size:1.1rem;line-height:1;margin-right:.4rem}textarea{user-select:text!important;padding:.75rem;flex-grow:1;min-height:80px;height:auto;max-height:200px}.tooltip-container{position:relative;display:inline-block;margin-left:.4rem}.tooltip-icon{cursor:pointer;color:#9ca3af;transition:color .2s ease-in-out;width:.9rem;height:.9rem}
+        
+        /* Hover de icono de tooltip usa la variable de acento */
+        .tooltip-icon:hover{color:var(--brand-accent-color)}
+        
+        .tooltip-content{position:absolute;top:100%;left:50%;transform:translateX(-50%) translateY(10px);width:max-content;max-width:250px;padding:.7rem 1rem;border-radius:.8rem;font-size:.8rem;line-height:1.4;text-align:center;color:var(--text-primary);opacity:0;visibility:hidden;transition:opacity .3s ease-out,transform .3s ease-out,visibility .3s ease-out;z-index:20;pointer-events:none;backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);background-color:rgba(255,255,255,0.95);border:1px solid rgba(200,200,200,0.4);box-shadow:0 8px 20px rgba(0,0,0,0.1)}body.dark-mode .tooltip-content{background-color:rgba(50,50,50,0.95);border:1px solid rgba(100,100,100,0.4);box-shadow:0 8px 20px rgba(0,0,0,0.4);color:var(--text-primary)}.tooltip-content.active{opacity:1;visibility:hidden;transform:translateX(-50%) translateY(0)}.image-preview-container{display:flex;align-items:center;justify-content:space-between;padding:.375rem;margin-top:.75rem;border-radius:.375rem;background-color:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.1)}body.dark-mode .image-preview-container{background-color:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:var(--text-primary)}.image-preview-container img{width:3.5rem;height:3.5rem;object-fit:cover;border-radius:.375rem;margin-right:.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.1)}.image-preview-container button{background-color:#ef4444;color:#fff;padding:.125rem;border-radius:9999px;transition:background-color .2s ease;box-shadow:none;margin-top:0}.image-preview-container button svg{width:.8rem;height:.8rem}.image-preview-container button:hover{background-color:#dc2626;transform:none}.toggle-switch-container{display:flex;position:relative;width:200px;height:32px;margin:1.5rem auto;background-color:var(--switch-bg);border-radius:9999px;border:1px solid var(--switch-border);box-shadow:var(--switch-shadow-inset),var(--switch-shadow-outer);cursor:pointer;user-select:none;overflow:hidden;transition:all var(--switch-transition-speed) var(--switch-transition-timing);padding:3px}.toggle-thumb{position:absolute;top:3px;left:3px;height:calc(100% - 6px);width:calc(50% - 3px);border-radius:9999px;background-color:var(--switch-primary-thumb);box-shadow:var(--switch-shadow-thumb);transition:all var(--switch-transition-speed) var(--switch-transition-timing);z-index:1}.toggle-label{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;letter-spacing:.4px;color:var(--switch-text);transition:all var(--switch-transition-speed) var(--switch-transition-timing);padding:0 12px;text-transform:uppercase}
+        
+        /* --- Estilos para 'OTRO' (fucsia) --- */
+        .toggle-switch-container[data-active=otro]{box-shadow:var(--switch-shadow-inset),0 0 0 3px var(--switch-primary-glow)}
+        .toggle-switch-container[data-active=otro] .toggle-thumb{transform:translateX(0);background-color:var(--switch-primary-thumb);box-shadow:var(--switch-shadow-thumb),0 0 15px var(--switch-primary-glow)}
+        .toggle-switch-container[data-active=otro] .toggle-label[data-value=otro]{color:var(--switch-text-active);font-weight:700}
+        .toggle-switch-container[data-active=otro] .toggle-label[data-value=entel]{color:var(--switch-text);font-weight:600}
+        
+        /* --- Estilos para 'ENTEL' (azul) --- */
+        .toggle-switch-container[data-active=entel]{box-shadow:var(--switch-shadow-inset),0 0 0 3px var(--switch-secondary-glow)}
+        .toggle-switch-container[data-active=entel] .toggle-thumb{transform:translateX(100%);background-color:var(--switch-secondary-thumb);box-shadow:var(--switch-shadow-thumb),0 0 15px var(--switch-secondary-glow)}
+        .toggle-switch-container[data-active=entel] .toggle-label[data-value=entel]{color:var(--switch-text-active);font-weight:700}
+        .toggle-switch-container[data-active=entel] .toggle-label[data-value=otro]{color:var(--switch-text);font-weight:600}
+        
+        .toggle-switch-container:hover{border-color:#cbd5e1}.toggle-switch-container:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(66,153,225,0.5)}#darkModeToggle{position:absolute;top:.75rem;right:.75rem;background-color:var(--dm-toggle-bg);border:1px solid var(--dm-toggle-border);border-radius:9999px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;box-shadow:var(--dm-toggle-shadow-inset),var(--dm-toggle-shadow-outer);cursor:pointer;z-index:30;transition:all .2s ease;outline:none;padding:0}#darkModeToggle:hover{transform:scale(1.05);box-shadow:var(--dm-toggle-shadow-inset),0 2px 8px rgba(0,0,0,0.15)}body.dark-mode #darkModeToggle:hover{box-shadow:var(--dm-toggle-shadow-inset),0 2px 8px rgba(0,0,0,0.6)}#darkModeToggle:active{transform:scale(.95);box-shadow:inset 0 2px 4px rgba(0,0,0,0.2)}body.dark-mode #darkModeToggle:active{box-shadow:inset 0 2px 4px rgba(0,0,0,0.4)}#darkModeToggle svg{width:1.25rem;height:1.25rem;fill:var(--dm-toggle-icon-color);transition:fill .3s ease}#darkModeToggle .sun-icon{display:block}body.dark-mode #darkModeToggle .sun-icon{display:none}#darkModeToggle .moon-icon{display:none}body.dark-mode #darkModeToggle .moon-icon{display:block}
+        #statusMessage { margin-top: 1rem; padding: 1rem; border-radius: 8px; text-align: center; }
+        .status-success { background-color: #d1fae5; color: #065f46; }
+        .status-error { background-color: #fee2e2; color: #991b1b; }
+        .status-loading { background-color: #dbeafe; color: #1e40af; }
+        body.dark-mode .status-success { background-color: #064e3b; color: #a7f3d0; }
+        body.dark-mode .status-error { background-color: #991b1b; color: #fecaca; }
+        body.dark-mode .status-loading { background-color: #1e3a8a; color: #bfdbfe; }
+        
+        /* --- ESTILOS RESPONSIVE --- */
+        @media (max-width: 480px) {
+            .glass-effect { padding: 0.75rem; }
+            h2.text-2xl { font-size: 1.25rem; line-height: 1.75rem; }
+            p.text-sm { font-size: 0.8rem; }
+            .toggle-switch-container { width: 180px; height: 28px; padding: 2px; margin-top: 1rem; margin-bottom: 1rem; }
+            .toggle-thumb { top: 2px; left: 2px; height: calc(100% - 4px); width: calc(50% - 2px); }
+            .toggle-label { font-size: 11px; }
+            #darkModeToggle { top: 0.5rem; right: 0.5rem; width: 36px; height: 36px; }
+            #darkModeToggle svg { width: 1.1rem; height: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-effect">
+        <button id="darkModeToggle" aria-label="Toggle dark mode"><svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18a6 6 0 100-12 6 6 0 000 12zM12 20a8 8 0 110-16 8 8 0 010 16zM12 2a1 1 0 011 1v2a1 1 0 11-2 0V3a1 1 0 011-1zM12 22a1 1 0 011 1v2a1 1 0 11-2 0v-2a1 1 0 011-1zM4.929 4.929a1 1 0 011.414 0L7.757 6.343a1 1 0 01-1.414 1.414L4.929 6.343a1 1 0 010-1.414zM17.657 17.657a1 1 0 011.414 0l1.414 1.414a1 1 0 01-1.414 1.414l-1.414-1.414a1 1 0 010-1.414zM2 12a1 1 0 011-1h2a1 1 0 110 2H3a1 1 0 01-1-1zM22 12a1 1 0 011-1h2a1 1 0 110 2h-2a1 1 0 01-1-1zM4.929 19.071a1 1 0 010-1.414l1.414-1.414a1 1 0 011.414 1.414l-1.414 1.414a1 1 0 01-1.414 0zM17.657 4.929a1 1 0 010-1.414l1.414-1.414a1 1 0 011.414 1.414l-1.414 1.414a1 1 0 01-1.414 0z"/></svg><svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.11-1.37a.75.75 0 01.75-.75c.49 0 .96 .18 1.32 .52A12 12 0 1112 3z"/></svg></button>
+        <h2 class="text-2xl font-extrabold text-gray-900 mb-2 text-center leading-tight">Ingreso de Venta <span id="companyTitleSpan" style="color: var(--interactive-blue);">ENTEL</span></h2>
+        <p class="text-gray-600 text-center mb-4 text-sm">Pega toda la información en el área de texto. El sistema <strong>procesará</strong> los datos automáticamente.</p>
+        <form id="dataForm" class="space-y-3">
+            <div id="companyToggleSwitch" class="toggle-switch-container mb-4" data-active="entel" role="switch" aria-checked="true" tabindex="0"><div class="toggle-thumb"></div><div class="toggle-label" data-value="otro">OTRO</div><div class="toggle-label" data-value="entel">ENTEL</div></div>
+            <div>
+                <label for="allDataInput" class="block text-sm font-semibold text-gray-700 mb-1">Pega aquí toda la información<span class="text-gray-500 font-normal text-xs">(Ejemplo de formato esperado abajo)</span><span class="tooltip-container"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="inline-block align-middle tooltip-icon" data-tooltip-id="inputTooltip"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg><div id="inputTooltip" class="tooltip-content">Introduce los datos de la venta aquí. Cada campo debe estar en una línea separada y seguir el formato "Nombre del Campo: Valor".</div></span></label>
+                <textarea id="allDataInput" name="allDataInput" rows="10" required class="mt-1 block w-full px-3 py-2.5 border border-gray-300 rounded-lg shadow-sm text-sm transition duration-150 ease-in-out placeholder-gray-400 bg-white dark:bg-gray-50 text-black resize" placeholder="Ejemplo:&#10;Nombre: Juan Pérez&#10;RUT del Cliente: 12.345.678-9&#10;..."></textarea>
+                <p class="text-gray-500 text-xs mt-1">Asegúrate de que cada dato esté en una línea separada y empiece con el nombre del campo seguido de dos puntos (":").</p>
+            </div>
+            <div class="flex justify-end items-center"><button type="button" id="copyFormatButton" class="secondary-button"><span class="emoji">📋</span>Copiar Formato Vacío</button><span class="tooltip-container"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="inline-block align-middle tooltip-icon" data-tooltip-id="copyButtonTooltip"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg><div id="copyButtonTooltip" class="tooltip-content">Copia una plantilla con todos los campos, lista para rellenar y pegar.</div></span></div>
+            <div id="copyConfirmation" class="text-xs text-green-600 mt-1 text-right hidden">¡Formato copiado!</div>
+            <div class="mt-3"><label for="imageUpload" class="secondary-button"><span class="emoji">📸</span>Seleccionar Imagen (Opcional)</label><input type="file" id="imageUpload" accept="image/*" class="hidden"><div id="imagePreviewContainer" class="image-preview-container mt-2 hidden"><img id="imagePreview" src="#" alt="Vista Previa de Imagen"><span id="imageFileName" class="text-gray-700 text-xs flex-grow truncate"></span><button type="button" id="clearImageButton" class="ml-2" aria-label="Clear image"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div></div>
+            <button type="submit" class="button-press-effect w-full flex justify-center py-2 px-4 rounded-lg text-base font-bold text-white mt-4"><span>Enviar Datos</span></button>
+        </form>
+        <div id="statusMessage" class="hidden"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // =================================================================
+            // --- CONFIGURACIÓN Y COMUNICACIÓN VERSÁTIL ---
+            // =================================================================
+            
+            /**
+             * CONFIGURACIÓN: Reemplaza esta URL con la de tu Aplicación Web de Google Apps Script.
+             * Se usará solo cuando el formulario se ejecute fuera de Google Apps Script.
+             */
+            const GAS_WEB_APP_URL = 'URL_DE_TU_APP_WEB_DE_GAS';
+
+            /**
+             * Maneja las respuestas exitosas del backend, ya sea desde GAS o desde la API.
+             * @param {object} response - Objeto de respuesta del backend.
+             */
+            const handleSuccess = (response) => {
+                showStatusMessage(response.message || '¡Venta registrada con éxito!', 'success');
+                dom.submitButton.disabled = false;
+                setTimeout(resetForm, 2500);
+            };
+
+            /**
+             * Maneja los errores del backend, ya sea desde GAS o desde la API.
+             * @param {object} error - Objeto de error.
+             */
+            const handleError = (error) => {
+                console.error('Error al enviar los datos:', error);
+                showStatusMessage(`Hubo un problema: ${error.message || 'Error desconocido'}`, 'error');
+                dom.submitButton.disabled = false;
+            };
+
+            /**
+             * FUNCIÓN PRINCIPAL DE ENVÍO HÍBRIDO.
+             * Detecta el entorno y envía los datos usando el método adecuado.
+             * @param {object} data - Los datos procesados del formulario.
+             */
+            const enviarDatosAlBackend = (data) => {
+                showStatusMessage('Enviando datos...', 'loading');
+                dom.submitButton.disabled = true;
+
+                // Detección del entorno: ¿Estamos dentro de Google Apps Script?
+                if (typeof google !== 'undefined' && google.script) {
+                    // --- ENTORNO A: DENTRO DE GOOGLE APPS SCRIPT ---
+                    console.log("Detectado entorno Google Apps Script. Usando google.script.run");
+                    google.script.run
+                        .withSuccessHandler(handleSuccess)
+                        .withFailureHandler(handleError)
+                        .processFormData(data);
+                } else {
+                    // --- ENTORNO B: FUERA DE GOOGLE APPS SCRIPT (SITIO WEB EXTERNO) ---
+                    console.log("Detectado entorno externo. Usando Fetch API hacia:", GAS_WEB_APP_URL);
+                    
+                    fetch(GAS_WEB_APP_URL, {
+                        method: 'POST',
+                        mode: 'cors', // Permite peticiones entre dominios
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data) // Convierte el objeto a string JSON
+                    })
+                    .then(response => {
+                        // Si la respuesta no es "ok" (ej. 400, 500), lanza un error
+                        if (!response.ok) {
+                            // Intenta leer el mensaje de error del cuerpo de la respuesta
+                            return response.json().then(err => { 
+                                throw new Error(err.message || `Error HTTP: ${response.status}`) 
+                            });
+                        }
+                        // Si es "ok", parsea el JSON y lo pasa al manejador de éxito
+                        return response.json();
+                    })
+                    .then(result => handleSuccess(result))
+                    .catch(error => handleError(error));
+                }
+            };
+
+
+            // =================================================================
+            // --- LÓGICA DE PROCESAMIENTO (SIN CAMBIOS) ---
+            // =================================================================
+
+            const formatAndValidateRut = (rut) => {
+                if (!rut || typeof rut !== 'string') throw new Error('RUT no proporcionado.');
+                let cleanRut = rut.replace(/[\.]/g, '').toLowerCase();
+                const rutRegex = /^\d{1,8}-[\dk]$/;
+                if (!rutRegex.test(cleanRut)) {
+                    throw new Error(`Formato de RUT inválido. Asegúrate de que termine en '-[número o K]', por ejemplo: '12345678-9'.`);
+                }
+                return cleanRut;
+            };
+
+            const FIELD_MAP = {
+                nombre:       { label: 'Nombre', synonyms: ['nombre', 'nombres', 'cliente', 'name', 'nombre completo'], required: true },
+                apellidos:    { label: 'Apellidos', synonyms: ['apellidos'] },
+                rut:          { label: 'RUT del Cliente', synonyms: ['rut', 'run', 'rut del cliente', 'rut cliente', 'identificacion', 'dni'], required: true, format: formatAndValidateRut },
+                telefono:     { label: 'Teléfono', synonyms: ['telefono', 'fono', 'celular', 'contacto', 'movil'] },
+                correo:       { label: 'Correo', synonyms: ['correo', 'email', 'mail', 'correo electronico'], format: v => v.toLowerCase() },
+                direccion:    { label: 'Dirección', synonyms: ['direccion', 'domicilio', 'address', 'calle'] },
+                comuna:       { label: 'Comuna', synonyms: ['comuna', 'ciudad'] },
+                region:       { label: 'Región', synonyms: ['region', 'provincia'] },
+                plan:         { label: 'Plan', synonyms: ['plan', 'servicio', 'plan contratado'] },
+                deco:         { label: 'Decodificador', synonyms: ['deco', 'decodificador', 'equipo', 'adicional'] },
+                observaciones:{ label: 'Observaciones', synonyms: ['observaciones', 'obs', 'observacion', 'nota', 'comentarios'] },
+                ejecutivo:    { label: 'Ejecutivo', synonyms: ['ejecutivo', 'ejecutivo (a)', 'vendedor', 'asesor', 'nombre del ejecutivo'] },
+                rutEjecutivo: { label: 'RUT del Ejecutivo', synonyms: ['rut del ejecutivo', 'rut ejecutivo'] },
+                supervisor:   { label: 'Supervisor', synonyms: ['supervisor', 'encargado'] },
+                serie:        { label: 'Serie', synonyms: ['serie', 'serial', 'numero de serie', 'número de serie'] },
+                zsmart:       { label: 'ID de orden', synonyms: ['zsmart', 'codigo zsmart', 'codigo z', 'id de orden', 'id orden'] },
+                estado:       { label: 'Estado', synonyms: ['estado', 'situacion'] },
+                lider:        { label: 'Líder', synonyms: ['lider', 'líder', 'jefe', 'monitor'] }
+            };
+
+            const parseInputData = (text) => {
+                const processedData = {};
+                const unmatchedLines = [];
+                const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+                const synonymMap = {};
+
+                for (const [canonicalName, config] of Object.entries(FIELD_MAP)) {
+                    for (const synonym of config.synonyms) {
+                        const normalizedSynonym = synonym.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                        synonymMap[normalizedSynonym] = canonicalName;
+                    }
+                }
+
+                lines.forEach(line => {
+                    const separatorIndex = line.indexOf(':');
+                    if (separatorIndex === -1) { if(line) unmatchedLines.push(line); return; }
+                    let key = line.substring(0, separatorIndex).trim();
+                    let value = line.substring(separatorIndex + 1).trim();
+                    if (!value) return; 
+                    key = key.replace(/^[^a-zA-Z0-9]+/, '');
+                    const normalizedKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                    const canonicalName = synonymMap[normalizedKey];
+
+                    if (canonicalName) {
+                        const config = FIELD_MAP[canonicalName];
+                        if (config.format) { value = config.format(value); }
+                        processedData[canonicalName] = value;
+                    } else { unmatchedLines.push(line); }
+                });
+                
+                if (processedData.nombre && processedData.apellidos) {
+                    processedData.nombre = `${processedData.nombre} ${processedData.apellidos}`.trim();
+                    delete processedData.apellidos;
+                }
+
+                const additionalObservations = unmatchedLines.join('\n');
+                if (additionalObservations) {
+                    if (processedData.observaciones) {
+                        processedData.observaciones = `${processedData.observaciones}\n${additionalObservations}`;
+                    } else {
+                        processedData.observaciones = additionalObservations;
+                    }
+                }
+
+                const missingFields = Object.entries(FIELD_MAP)
+                    .filter(([key, config]) => config.required && !processedData[key])
+                    .map(([_, config]) => config.label);
+
+                if (missingFields.length > 0) {
+                    throw new Error(`Faltan campos obligatorios: ${missingFields.join(', ')}.`);
+                }
+
+                return processedData;
+            };
+
+            const copyFormatTemplate = Object.values(FIELD_MAP)
+                .filter(config => config.label !== 'Apellidos')
+                .map(config => `${config.label}: `).join('\n');
+
+            // =================================================================
+            // --- LÓGICA DE UI (SIN CAMBIOS) ---
+            // =================================================================
+
+            const dom = {
+                dataForm:document.getElementById('dataForm'), statusMessage:document.getElementById('statusMessage'), allDataInput:document.getElementById('allDataInput'), copyFormatButton:document.getElementById('copyFormatButton'), copyConfirmation:document.getElementById('copyConfirmation'), imageUpload:document.getElementById('imageUpload'), imagePreviewContainer:document.getElementById('imagePreviewContainer'), imagePreview:document.getElementById('imagePreview'), imageFileName:document.getElementById('imageFileName'), clearImageButton:document.getElementById('clearImageButton'), companyToggleSwitch:document.getElementById('companyToggleSwitch'), darkModeToggle:document.getElementById('darkModeToggle'), body:document.body, companyTitleSpan: document.getElementById('companyTitleSpan'), submitButton: document.querySelector('button[type="submit"]')
+            };
+            
+            let appState = {selectedImageData:null,selectedImageName:null,currentCompany:'entel'};
+            
+            const showStatusMessage = (message, type) => {
+                const el = dom.statusMessage;
+                el.textContent = message;
+                el.className = '';
+                el.classList.add('p-4', 'rounded-md', 'mt-4', 'text-sm', 'font-medium', 'text-center');
+                el.classList.add(`status-${type}`);
+                el.classList.remove('hidden');
+            };
+            const clearImageSelection = () => {
+                dom.imageUpload.value = ''; appState.selectedImageData = null; appState.selectedImageName = null; dom.imagePreview.src = '#'; dom.imageFileName.textContent = ''; dom.imagePreviewContainer.classList.add('hidden');
+            };
+            const updateSwitchState = (company) => {
+                appState.currentCompany = company;
+                dom.companyToggleSwitch.setAttribute('data-active', company);
+                dom.companyToggleSwitch.setAttribute('aria-checked', company === 'entel');
+                if (company === 'entel') {
+                    dom.companyTitleSpan.textContent = 'ENTEL'; dom.companyTitleSpan.style.color = 'var(--interactive-blue)';
+                    document.documentElement.style.setProperty('--brand-accent-color', 'var(--interactive-blue)'); document.documentElement.style.setProperty('--brand-accent-glow', 'rgba(0, 122, 255, 0.4)'); document.documentElement.style.setProperty('--brand-accent-hover-bg', 'rgba(0, 122, 255, 0.07)');
+                } else {
+                    dom.companyTitleSpan.textContent = 'OTRO'; dom.companyTitleSpan.style.color = 'var(--brand-fuchsia)';
+                    document.documentElement.style.setProperty('--brand-accent-color', 'var(--brand-fuchsia)'); document.documentElement.style.setProperty('--brand-accent-glow', 'rgba(230, 0, 122, 0.4)'); document.documentElement.style.setProperty('--brand-accent-hover-bg', 'rgba(230, 0, 122, 0.07)');
+                }
+            };
+            const resetForm = () => {
+                dom.dataForm.reset(); clearImageSelection(); updateSwitchState('entel'); dom.statusMessage.classList.add('hidden');
+            };
+            const applyTheme = (theme) => {
+                dom.body.classList.toggle('dark-mode', theme === 'dark'); localStorage.setItem('theme', theme);
+            };
+            
+            // =================================================================
+            // --- EVENT LISTENERS (ACTUALIZADO EL DE SUBMIT) ---
+            // =================================================================
+
+            dom.darkModeToggle.addEventListener("click", () => applyTheme(dom.body.classList.contains('dark-mode') ? 'light' : 'dark'));
+            dom.companyToggleSwitch.addEventListener("click", () => updateSwitchState(appState.currentCompany === 'otro' ? 'entel' : 'otro'));
+            dom.clearImageButton.addEventListener('click', clearImageSelection);
+
+            // Listener principal del formulario: ahora usa la función de envío híbrido
+            dom.dataForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                
+                try {
+                    // 1. Parsear y validar los datos de entrada
+                    const parsedData = parseInputData(dom.allDataInput.value);
+                    parsedData.empresa = appState.currentCompany.toUpperCase();
+
+                    // 2. Añadir datos de la imagen si existe
+                    if (appState.selectedImageData && appState.selectedImageName) {
+                        parsedData.imageData = appState.selectedImageData.split(',')[1];
+                        parsedData.imageMimeType = appState.selectedImageData.split(';')[0].split(':')[1];
+                        parsedData.imageName = appState.selectedImageName;
+                    }
+                    
+                    // 3. Llamar a la función de envío versátil
+                    enviarDatosAlBackend(parsedData);
+
+                } catch (error) {
+                    // Capturar errores de validación (ej. RUT, campos faltantes)
+                    console.error("Error de validación:", error.message);
+                    handleError(error); // Reutilizamos el manejador de errores
+                }
+            });
+
+            dom.copyFormatButton.addEventListener("click", () => {
+                const fallbackCopyTextToClipboard = (text) => {
+                    const textArea = document.createElement("textarea"); textArea.value = text; textArea.style.position = "fixed"; document.body.appendChild(textArea); textArea.focus(); textArea.select();
+                    try { document.execCommand('copy'); dom.copyConfirmation.classList.remove('hidden'); setTimeout(() => dom.copyConfirmation.classList.add('hidden'), 2000); } catch (err) { console.error("Error al copiar con fallback:", err); }
+                    document.body.removeChild(textArea);
+                };
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(copyFormatTemplate).then(() => { dom.copyConfirmation.classList.remove('hidden'); setTimeout(() => dom.copyConfirmation.classList.add('hidden'), 2000); }).catch(err => { console.warn("Error al copiar con navigator.clipboard:", err); fallbackCopyTextToClipboard(copyFormatTemplate); });
+                } else { fallbackCopyTextToClipboard(copyFormatTemplate); }
+            });
+
+            dom.imageUpload.addEventListener("change", (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        appState.selectedImageData = e.target.result; appState.selectedImageName = file.name; dom.imagePreview.src = appState.selectedImageData; dom.imageFileName.textContent = appState.selectedImageName; dom.imagePreviewContainer.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            document.querySelectorAll('.tooltip-icon').forEach(icon => {
+                const tooltipId = icon.getAttribute('data-tooltip-id'); const tooltipContent = document.getElementById(tooltipId);
+                if (tooltipContent) { icon.addEventListener('mouseenter', () => tooltipContent.classList.add('active')); icon.addEventListener('mouseleave', () => tooltipContent.classList.remove('active')); }
+            });
+
+            const preferredTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            applyTheme(preferredTheme);
+            updateSwitchState(appState.currentCompany);
+        });
+    </script>
+</body>
+</html>
